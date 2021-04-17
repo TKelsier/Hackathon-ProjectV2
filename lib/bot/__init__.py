@@ -87,6 +87,7 @@ class Bot(BotBase):
             self.ready = True
             self.guild = self.get_guild(832762981443829781)
             self.stdout = self.get_channel(832780649571155969)
+            self.reaction_message = await self.get_channel(832908179725352970).fetch_message(832909787263008779)
             self.scheduler.start()
 
             await self.stdout.send("Now online!")
