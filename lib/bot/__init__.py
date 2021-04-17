@@ -1,7 +1,6 @@
 from discord import Intents
 from datetime import datetime
 from glob import glob 
-from discord import Embed
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord.ext.commands import Bot as BotBase
 from discord.ext.commands import CommandNotFound

@@ -1,6 +1,7 @@
 from discord.ext.commands import Cog
 from discord.ext import commands
 from discord.ext.commands import command
+from discord import Embed
 import typing as t
 
 import asyncio
@@ -15,7 +16,6 @@ class Main(Cog):
     async def assignment_group(self, ctx):
         pass
 
-    # execute INSTER INTO (table name) (Columns) Values
     @assignment_group.command(name="add")
     async def assignment_add_command(self, ctx, name: str, due_date: str):
         db.execute(
@@ -25,28 +25,53 @@ class Main(Cog):
             due_date,
         )
 
-        print("Test")
+        embed = self.display_assignment("Added Assignment", ctx.author.id, name)   
 
-        check = db.records(
-            "SELECT DueDate FROM assignments WHERE UserID = ? AND Name = ?",
-            ctx.author.id,
-            name
+        await ctx.send(embed=embed)
+
+    @assignment_group.command(name="delete")
+    async def assignment_delete_command(self, ctx, name: str):
+        embed = self.display_assignment("Deleted Assignment", ctx.author.id, name)
+        db.execute(
+            "DELETE FROM assignments WHERE UserID = ? AND Name = ?",
+           ctx.author.id,
+           name
         )
 
-        await ctx.send(check)
-    
-    @assignment_group.command(name="delete")
-    async def assignment_delete_command(self, ctx, *, name: str):
-        pass
+        await ctx.send(embed=embed)
 
     @assignment_group.command(name="edit")
     async def assignment_edit_command(self, ctx, *, name: str):
         pass
 
-    @command(name="ping")
-    async def ping(self, ctx, name: str, subject: str, due_date: str):
-        await ctx.send(f"Assignment: {name} is due on {due_date} and is in the subject: {subject}")
-        print("pong")
+    @assignment_group.command(name="display", aliases=["view", "see"])
+    async def assignment_display_command(self, ctx, *, name: str):
+        embed = self.display_assignment("Displaying an Assignment", ctx.author.id, name)
+
+        await ctx.send(embed=embed)
+
+    
+    @assignment_group.command(name="display-all", aliases=["view-all", "see-all", "all"])
+    async def assignment_display_all_command(self, ctx):
+        assignments = db.record("SELECT Name, DueDate FROM assignments WHERE UserID GLOB ?",
+                      ctx.author.id
+        )
+
+        await ctx.send(assignments)
+
+    def display_assignment(self, title: str, UserID: int, name: str):
+        due_date = db.record("SELECT DueDate FROM assignments WHERE UserID = ? AND Name = ?",
+                            UserID,
+                            name
+        )
+        if due_date == None:
+            print("This ran")
+            return Embed(title="No Assignment Found")
+
+        embed = Embed(title=title,)
+        embed.add_field(name=f"**__{name}__**", value=f"Due on {due_date[0]}", inline=True)
+
+        return embed
 
     @Cog.listener()
     async def on_ready(self):
